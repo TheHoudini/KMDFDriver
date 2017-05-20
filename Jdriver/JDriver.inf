@@ -1,0 +1,97 @@
+;
+; NDriver.inf
+;
+
+[Version]
+Signature="$WINDOWS NT$"
+Class=HIDClass
+ClassGuid={745a17a0-74d3-11d0-b6fe-00a0c90f57da}
+Provider=%ManufacturerName%
+CatalogFile=JDriver.cat
+DriverVer = 04/30/2017,1.31.1.9
+
+[DestinationDirs]
+DefaultDestDir = 12
+JDriver_Device_CoInstaller_CopyFiles = 11
+
+[SourceDisksNames]
+1 = %DiskName%,,,""
+
+[SourceDisksFiles]
+JDriver.sys  = 1,,
+;
+
+
+;*****************************************
+; Install Section
+;*****************************************
+
+[Manufacturer]
+%ManufacturerName%=Standard,NTamd64
+
+[Standard.NTamd64]
+%JDriver.DeviceDesc%=JDriver_Device, USB\VID_0458&PID_1004
+
+[JDriver_Device.NT]
+CopyFiles=Drivers_Dir
+
+[Drivers_Dir]
+JDriver.sys
+
+[JDriver_Device.NT.HW]
+AddReg=JDriver_AddReg
+
+[JDriver_AddReg]
+; By default, USBDevice class uses iProduct descriptor to name the device in
+; Device Manager on Windows 8 and higher.
+; Uncomment for this device to use %DeviceName% on Windows 8 and higher:
+HKR,,"LowerFilters",0x00010008,"JDriver" ; FLG_ADDREG_TYPE_MULTI_SZ | FLG_ADDREG_APPEND
+
+;-------------- Service installation
+[JDriver_Device.NT.Services]
+AddService=mshidkmdf,0x00000002,mshidkmdf_Service_Inst ;flag 0x2 sets this as the service for the device
+
+
+[mshidkmdf_Service_Inst]
+ServiceType    = 1                  ; SERVICE_KERNEL_DRIVER
+StartType      = 3                  ; SERVICE_DEMAND_START
+ErrorControl   = 1                  ; SERVICE_ERROR_NORMAL
+ServiceBinary  = %12%\mshidkmdf.sys
+
+; -------------- NDriver driver install sections
+[JDriver_Service_Inst]
+DisplayName    = %JDriver.SVCDESC%
+ServiceType    = 1               ; SERVICE_KERNEL_DRIVER
+StartType      = 3               ; SERVICE_DEMAND_START
+ErrorControl   = 1               ; SERVICE_ERROR_NORMAL
+ServiceBinary  = %12%\JDriver.sys
+
+;
+;--- NDriver_Device Coinstaller installation ------
+;
+
+[JDriver_Device.NT.CoInstallers]
+AddReg=JDriver_Device_CoInstaller_AddReg
+CopyFiles=JDriver_Device_CoInstaller_CopyFiles
+
+[JDriver_Device_CoInstaller_AddReg]
+;
+
+
+[JDriver_Device_CoInstaller_CopyFiles]
+;
+
+
+[JDriver_Device.NT.Wdf]
+KmdfService =  JDriver, JDriver_wdfsect
+[JDriver_wdfsect]
+KmdfLibraryVersion = 1.15
+
+[Strings]
+SPSVCINST_ASSOCSERVICE= 0x00000002
+ManufacturerName="<Your manufacturer name>" ;TODO: Replace with your manufacturer name
+ClassName="Universal Serial Bus devices"
+DiskName = "JDriver Installation Disk"
+JDriver.DeviceDesc = "JDriver Device"
+JDriver.SVCDESC = "JDriver Service"
+REG_MULTI_SZ = 0x00010000
